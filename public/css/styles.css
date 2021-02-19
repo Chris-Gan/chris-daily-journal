@@ -17,9 +17,7 @@
 .navbar-nav  li a:hover {
     color: #1abc9c !important;
 }
-.linkTitle{
-    margin-right: 5rem;
-}
+
 .linkTitle:link{
     color:black;
 }
@@ -33,9 +31,20 @@ i{
     font-weight: 900;
 }
 
-.header-part{
+.header-part,.titleDates,.buttons{
     display: flex;
 }
+.titleDates{
+    flex-direction: column;
+    margin-right: 5rem;
+}
+.date{
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 600;
+    color:gray;
+    margin-top:-1rem;
+}
+
 
 .addButtons{
     background: none;

@@ -1,7 +1,10 @@
 <%- include("partials/header") -%>
 <div class="header-part">
+    <div class="titleDates">
     <h1 class="linkTitle"><%= postTitle %></h1>
-
+    <p class="date"><%= date %></p>
+</div>
+<div class="buttons">
     <form action="/delete" method="POST">
         <label for="deleteButton"></label>
         <button type="submit" id="deleteButton" class="addButtons deleteButton" name="id" value="<%= postID %>">
@@ -14,6 +17,8 @@
             <i class="fas fa-edit"></i>
         </button>
     </form>
+</div>
+
 </div>
 <div><%= postContent %></div>
 <%- include("partials/footer") -%>

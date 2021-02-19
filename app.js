@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
 const mongoose = require("mongoose");
+const date = require(__dirname + "/date.js" )
 
 mongoose.connect("mongodb://localhost:27017/bloggerDB",{useNewUrlParser: true, useUnifiedTopology: true});
 const contentSchema = new mongoose.Schema({
@@ -15,12 +16,23 @@ const contentSchema = new mongoose.Schema({
   postBody:{
     type: String,
     required: [true, "Please enter your content"]
+  },
+  postDate:{
+    type: Date,
+    default:Date.now,
+    get: value => value.toDateString()
   }
+});
+const userSchema = new mongoose.Schema({
+  email:String,
+  password:String,
+  journal:[contentSchema]
 });
 
 const ContentModel = mongoose.model("Post",contentSchema);
 const aboutContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 const app = express();
+const Currentdate = date.currentDate();
 
 app.set('view engine', 'ejs');
 
@@ -30,7 +42,8 @@ app.use(express.static(__dirname + "/public"));
 app.post("/compose",function(req,res){
   const post = new ContentModel({
     postTitle: req.body.title,
-    postBody: req.body.post
+    postBody: req.body.post, 
+    postDate: Currentdate
   });
   post.save(function(err){
     if(!err){
@@ -98,9 +111,10 @@ app.get("/posts/:title", function(req,res){
     posts.forEach(function(post){
       const postTitleCompared = _.lowerCase(post.postTitle);
       const postID = post._id;
+      const date = post.postDate;
 
       if ((lowerRouteTitle === postTitleCompared)||(routeTitle == postID)){
-        res.render("post",{postTitle:post.postTitle, postContent:post.postBody,postID:postID});
+        res.render("post",{postTitle:post.postTitle, postContent:post.postBody,postID:postID,date:date});
       }else{
         console.log("match not found");
       }

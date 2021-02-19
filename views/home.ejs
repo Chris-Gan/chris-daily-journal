@@ -1,23 +1,28 @@
 <%- include("partials/header") -%>
 <h1 class="title">Journal Index</h1>
-<div>
     <% posts.forEach(function(post){ %>
         <div class="header-part">
-            <a class = "linkTitle" href="/posts/<%= post._id %>"><h2><%= post.postTitle %></h2></a>
-        <form action="/delete" method="POST">
-            <label for="deleteButton"></label>
-            <button type="submit" id="deleteButton" class="addButtons deleteButton" name="id" value="<%= post._id %>">
-                <i class="fas fa-minus-square"></i>         
-            </button>
-        </form>
-        <form action="/update" method="POST">
-            <label for="updateButton"></label>
-            <button type="submit" id="updateButton" class="addButtons updateButton" name="id"  value="<%= post._id %>">
-                <i class="fas fa-edit"></i>
-            </button>
-        </form>
-        </div>
+            <div class="titleDates">
+                <a class = "linkTitle" href="/posts/<%= post._id %>"><h2><%= post.postTitle %></h2></a>
+                <p class="date"><%= post.postDate %></p>
+            </div>
+            <div class="buttons">
+                <form action="/delete" method="POST">
+                    <label for="deleteButton"></label>
+                    <button type="submit" id="deleteButton" class="addButtons deleteButton" name="id" value="<%= post._id %>">
+                        <i class="fas fa-minus-square"></i>         
+                    </button>
+                </form>
+                <form action="/update" method="POST">
+                    <label for="updateButton"></label>
+                    <button type="submit" id="updateButton" class="addButtons updateButton" name="id"  value="<%= post._id %>">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </form>
+            </div>
         
+        </div>
+
         <% if (post.postBody.length < 100){ %>
             <p><%= post.postBody %></p>
             
@@ -26,6 +31,6 @@
     <% } %>
 
  <% }); %>
-</div>
+
 
 <%- include("partials/footer") -%>
