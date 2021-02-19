@@ -1,0 +1,66 @@
+.body-content{
+    min-height: 50vh;;
+}
+.container-fluid {
+    padding-top: 70px;
+    padding-bottom: 70px;
+}
+.navbar {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 0;
+    font-size: 12px;
+    letter-spacing: 5px;
+}
+.navbar-nav  li a:hover {
+    color: #1abc9c !important;
+}
+.linkTitle{
+    margin-right: 5rem;
+}
+.linkTitle:link{
+    color:black;
+}
+i{
+    font-size:x-large;
+}
+
+.title{
+    font-family: 'Great Vibes', cursive;
+    font-size: 5rem;
+    font-weight: 900;
+}
+
+.header-part{
+    display: flex;
+}
+
+.addButtons{
+    background: none;
+    border: none;
+    outline: none;
+    padding: 2.7rem 0.2rem ;
+}
+.addButtons:hover, addButtons:active{
+    color: black;
+}
+.footer-padding {
+	padding-bottom: 60px;
+}
+
+.footer {
+    position: fixed;
+	text-align: center;
+	bottom: 0;
+	width: 100%;
+	height: 60px;
+	background-color: #1abc9c;
+}
+
+.footer p {
+	padding-top: 25px;
+	font-size: 12px;
+  color: #fff;
+}

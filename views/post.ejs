@@ -1,0 +1,19 @@
+<%- include("partials/header") -%>
+<div class="header-part">
+    <h1 class="linkTitle"><%= postTitle %></h1>
+
+    <form action="/delete" method="POST">
+        <label for="deleteButton"></label>
+        <button type="submit" id="deleteButton" class="addButtons deleteButton" name="id" value="<%= postID %>">
+            <i class="fas fa-minus-square"></i>         
+        </button>
+    </form>
+    <form action="/update" method="POST">
+        <label for="updateButton"></label>
+        <button type="submit" id="updateButton" class="addButtons updateButton" name="id"  value="<%= postID %>">
+            <i class="fas fa-edit"></i>
+        </button>
+    </form>
+</div>
+<div><%= postContent %></div>
+<%- include("partials/footer") -%>
