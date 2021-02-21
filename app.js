@@ -5,9 +5,28 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash");
 const mongoose = require("mongoose");
-const date = require(__dirname + "/date.js" )
+const passport = require("passport");
+const session = require("express-session");
+const passportLocalMongoose = require("passport-local-mongoose");
+require("dotenv").config()
 
+const app = express();
+app.set('view engine', 'ejs');
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static(__dirname + "/public"));
+app.use(session({
+  secret:process.env.SECRET,
+  saveUninitialized:false,
+  resave:false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Mongoose
 mongoose.connect("mongodb://localhost:27017/bloggerDB",{useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.set('useCreateIndex', true);
 const contentSchema = new mongoose.Schema({
   postTitle:{
     type:String,
@@ -24,90 +43,151 @@ const contentSchema = new mongoose.Schema({
   }
 });
 const userSchema = new mongoose.Schema({
-  email:String,
+  username:String,
   password:String,
   journal:[contentSchema]
 });
 
+userSchema.plugin(passportLocalMongoose);
+
 const ContentModel = mongoose.model("Post",contentSchema);
-const aboutContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
-const app = express();
-const Currentdate = date.currentDate();
+const User = mongoose.model("User", userSchema);
+passport.use(User.createStrategy());
 
-app.set('view engine', 'ejs');
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(express.static(__dirname + "/public"));
 
 app.post("/compose",function(req,res){
-  const post = new ContentModel({
-    postTitle: req.body.title,
-    postBody: req.body.post, 
-    postDate: Currentdate
-  });
-  post.save(function(err){
-    if(!err){
-      res.redirect("/");
-    }else{
-      console.log("Error occurs!")
-    }
-  });
+  if(req.isAuthenticated()){
+    const id = req.user._id;
+    User.findById(id,function(err,results){
+      const post = new ContentModel({
+        postTitle: req.body.title,
+        postBody: req.body.post, 
+        // postDate: Currentdate
+      });
+      results.journal.push(post);
+      results.save(function(err){
+        if(!err){
+          res.redirect("/home");
+        }else{
+          console.log(err);
+        }
+      });
+    })
+  }
 });
 
 app.post("/delete",function(req,res){
-  const articleID = req.body.id;
-  ContentModel.deleteOne({_id:articleID},function(err,result){
-    if(!err){
-      console.log("item with ID " + articleID + " is deleted from the database!")
-    }
-  });
-  res.redirect("/");
+  if(req.isAuthenticated()){
+    const articleID = req.body.id;
+    const id = req.user._id;
+    User.findOneAndUpdate({_id:id},{$pull:{journal:{_id:articleID}}}, function(err,results){
+      if(!err){
+        console.log("item with ID " + articleID + " is deleted from the database!");
+      }
+    });
+    res.redirect("/home");
+  }
 });
 
 app.post("/update",function(req,res){
-  const articleID= req.body.id;
-  ContentModel.findOne({_id:articleID},function(err,result){
-    if(!err){
-      if(result){
-        const title = result.postTitle;
-        const content = result.postBody;
-        res.render("update",{
-          title:title,
-          content:content
-        });
-        ContentModel.deleteOne({_id:articleID},function(error,results){
-          if(!error){
-            console.log("Article with ID " + articleID+ " is deleted upon upon");
+  if(req.isAuthenticated()){
+    const id = req.user._id;
+    const articleID= req.body.id;
+    
+    User.findById(id,function(err,result){
+      if(!err){
+        if(result){
+          console.log(result.journal);
+          const journalList = result.journal; 
+          journalList.forEach(function(journal){
+            if (journal._id == articleID){
+              const title = journal.postTitle;
+              const content = journal.postBody;
+              // console.log(journal);
+              // console.log(title);
+              res.render("update",{title:title,content:content});
+            }else{
+              console.log("article with ID " + articleID + " is not found!!");
+            }
+          });            
+            User.findOneAndUpdate({_id:id},{$pull:{journal:{_id:articleID}}}, function(deleteErr,deleteResults){
+              if(!deleteErr){
+                console.log("Article with ID: "+articleID + " is deleted upon update")
+              }
+          });
           }
-        })
       }
+    });
+  }
+}); 
+app.post("/register",function(req,res){
+  const username = req.body.username;
+  const password = req.body.password;
+  User.register({username:username}, password, function(err, user){
+    if(err){
+      console.log(err);
+      res.redirect("/register");
+    }else{
+      passport.authenticate("local")(req,res, function(){
+        res.redirect("/")
+      })
+    }
+  })
+});
+
+app.post("/",function(req,res){
+  const user = new User({
+    username:req.body.username,
+    password:req.body.password
+  });
+  req.login(user, function(err){
+    if(err){
+      console.log(err);
+    }else{
+      passport.authenticate("local")(req,res,function(){
+        res.redirect("/home");
+      })
     }
   })
 })
 
-app.get("/", function(req,res){
- ContentModel.find(function(err,posts){
-    if(!err){
-      console.log("All documents returned");
-      res.render("home",{posts:posts});
-    }
-  });
+app.get("/home", function(req,res){
+  if(req.isAuthenticated()){
+    const id = req.user._id;
+    console.log(id);
+    User.findById(id,function(err,results){
+      if(!err){
+        res.render("home",{posts:results.journal})
+      }
+    })
+  }  
+});
 
-  
-})
-
-app.get("/about",function(req,res){
-  res.render("about",{aboutMarkerContent: aboutContent});
-})
 
 app.get("/compose", function(req,res){
   res.render("compose");
+});
+app.get("/register",function(req,res){
+  res.render("register");
+});
+app.get("/", function(req,res){
+  res.render("login");
+});
+app.get("/logout",function(req,res){
+  req.logout();
+  res.redirect("/");
 })
 
 app.get("/posts/:title", function(req,res){
+  if(req.isAuthenticated()){
   const routeTitle = req.params.title;
   const lowerRouteTitle = _.lowerCase(req.params.title); 
-  ContentModel.find(function(err,posts){
+  const id = req.user._id;
+  User.findById(id,function(err,results){
+    const posts = results.journal;
     posts.forEach(function(post){
       const postTitleCompared = _.lowerCase(post.postTitle);
       const postID = post._id;
@@ -118,10 +198,13 @@ app.get("/posts/:title", function(req,res){
       }else{
         console.log("match not found");
       }
-    })
+    });
   });
+  }
 
-})
+});
+
+
 
 app.listen(3000, function() {
   console.log("Server started on port 3000");
