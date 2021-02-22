@@ -132,13 +132,13 @@ app.post("/register",function(req,res){
       res.redirect("/register");
     }else{
       passport.authenticate("local")(req,res, function(){
-        res.redirect("/")
+        res.render("registerSuccessful")
       })
     }
   })
 });
 
-app.post("/",function(req,res){
+app.post("/",function(req,res,next){
   const user = new User({
     username:req.body.username,
     password:req.body.password
