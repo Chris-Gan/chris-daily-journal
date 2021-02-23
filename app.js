@@ -25,7 +25,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Mongoose
-mongoose.connect("mongodb://localhost:27017/bloggerDB",{useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(process.env.ATLAS,{useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set('useCreateIndex', true);
 const contentSchema = new mongoose.Schema({
   postTitle:{
